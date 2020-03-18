@@ -103,6 +103,8 @@ class QCircuitMachine(RuleBasedStateMachine):
 
     # Gates of various shapes
 
+    # Maybe .control some
+    # Maybe .to_instruciton/to_gate some
     @rule(gate=st.sampled_from(oneQ_gates),
           qarg=qubits)
     def add_1q_gate(self, gate, qarg):
