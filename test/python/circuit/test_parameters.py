@@ -14,6 +14,7 @@
 
 """Test circuits with variable parameters."""
 
+import re
 import pickle
 from operator import add, sub, mul, truediv
 
@@ -664,6 +665,33 @@ class TestParameterExpressions(QiskitTestCase):
 
     supported_operations = [add, sub, mul, truediv]
 
+    def test_raise_if_sub_unknown_parameters(self):
+        """Verify we raise if asked to sub a parameter not in self."""
+        x = Parameter('x')
+        expr = x + 2
+
+        y = Parameter('y')
+        z = Parameter('z')
+
+        with self.assertRaisesRegex(CircuitError, 'not present'):
+            expr.subs({y: z})
+
+    def test_raise_if_subbin_in_parameter_name_conflict(self):
+        """Verify we raise if substituting in conflicting parameter names."""
+        x = Parameter('x')
+        y1 = Parameter('y')
+
+        expr = x + y1
+
+        y2 = Parameter('y')
+
+        # Replacing an existing name is okay.
+        expr.subs({y1: y2})
+
+        with self.assertRaisesRegex(CircuitError, 'Name conflict'):
+            expr.subs({x: y2})
+
+    
     def test_expressions_of_parameter_with_constant(self):
         """Verify operating on a Parameter with a constant."""
 
