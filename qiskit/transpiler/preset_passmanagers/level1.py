@@ -21,6 +21,8 @@ from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit.transpiler.passes import Unroller
+from qiskit.transpiler.passes import BasisTranslator
+from qiskit.transpiler.passes import SynthesizeUnitaries
 from qiskit.transpiler.passes import Unroll3qOrMore
 from qiskit.transpiler.passes import CXCancellation
 from qiskit.transpiler.passes import CheckMap
@@ -45,6 +47,8 @@ from qiskit.transpiler.passes import Layout2qDistance
 
 from qiskit.transpiler import TranspilerError
 
+
+from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
 
 def level_1_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
     """Level 1 pass manager: light optimization by simple adjacent gate collapsing.
@@ -126,7 +130,9 @@ def level_1_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
         raise TranspilerError("Invalid routing method %s." % routing_method)
 
     # 6. Unroll to the basis
-    _unroll = Unroller(basis_gates)
+    # _unroll = Unroller(basis_gates)
+    _unroll = [SynthesizeUnitaries(sel),
+               BasisTranslator(sel, basis_gates)]
 
     # 7. Fix any bad CX directions
     _direction_check = [CheckCXDirection(coupling_map)]

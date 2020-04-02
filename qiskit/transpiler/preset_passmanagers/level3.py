@@ -22,6 +22,8 @@ from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.passmanager import PassManager
 
 from qiskit.transpiler.passes import Unroller
+from qiskit.transpiler.passes import BasisTranslator
+from qiskit.transpiler.passes import SynthesizeUnitaries
 from qiskit.transpiler.passes import Unroll3qOrMore
 from qiskit.transpiler.passes import CheckMap
 from qiskit.transpiler.passes import CXDirection
@@ -49,6 +51,9 @@ from qiskit.transpiler.passes import ApplyLayout
 from qiskit.transpiler.passes import CheckCXDirection
 
 from qiskit.transpiler import TranspilerError
+
+
+from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
 
 
 def level_3_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
@@ -87,7 +92,9 @@ def level_3_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
     backend_properties = pass_manager_config.backend_properties
 
     # 1. Unroll to the basis first, to prepare for noise-adaptive layout
-    _unroll = Unroller(basis_gates)
+    # _unroll = Unroller(basis_gates)
+    _unroll = [SynthesizeUnitaries(sel),
+               BasisTranslator(sel, basis_gates)]
 
     # 2. Layout on good qubits if calibration info available, otherwise on dense links
     _given_layout = SetLayout(initial_layout)
@@ -132,7 +139,9 @@ def level_3_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
 
     _opt = [RemoveResetInZeroState(),
             Collect2qBlocks(), ConsolidateBlocks(),
-            Unroller(basis_gates),  # unroll unitaries
+            # Unroller(basis_gates),  # unroll unitaries
+            SynthesizeUnitaries(sel),
+               BasisTranslator(sel, basis_gates),
             Optimize1qGates(basis_gates), CommutativeCancellation(),
             OptimizeSwapBeforeMeasure(), RemoveDiagonalGatesBeforeMeasure()]
 
