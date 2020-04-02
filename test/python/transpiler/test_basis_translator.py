@@ -448,7 +448,8 @@ class TestUnrollerCompatability(QiskitTestCase):
     def test_unrolling_parameterized_composite_gates(self):
         """Verify unrolling circuits with parameterized composite gates."""
         from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
-
+        mock_sel = EquivalenceLibrary(base=std_eqlib)
+        
         qr1 = QuantumRegister(2)
         subqc = QuantumCircuit(qr1)
 
@@ -462,14 +463,14 @@ class TestUnrollerCompatability(QiskitTestCase):
         qr2 = QuantumRegister(4)
         qc = QuantumCircuit(qr2)
 
-        qc.append(subqc.to_instruction(), [qr2[0], qr2[1]])
-        qc.append(subqc.to_instruction(), [qr2[2], qr2[3]])
+        qc.append(subqc.to_instruction(equivalence_library=mock_sel), [qr2[0], qr2[1]])
+        qc.append(subqc.to_instruction(equivalence_library=mock_sel), [qr2[2], qr2[3]])
 
         dag = circuit_to_dag(qc)
         pass_ = SynthesizeUnitaries(sel)
         dag = pass_.run(dag)
 
-        out_dag = BasisTranslator(sel, ['u1', 'cx']).run(dag)
+        out_dag = BasisTranslator(mock_sel, ['u1', 'cx']).run(dag)
 
         expected = QuantumCircuit(qr2)
         expected.u1(theta, qr2[0])
@@ -487,14 +488,14 @@ class TestUnrollerCompatability(QiskitTestCase):
         phi = Parameter('phi')
         gamma = Parameter('gamma')
 
-        qc.append(subqc.to_instruction({theta: phi}), [qr2[0], qr2[1]])
-        qc.append(subqc.to_instruction({theta: gamma}), [qr2[2], qr2[3]])
+        qc.append(subqc.to_instruction({theta: phi}, mock_sel), [qr2[0], qr2[1]])
+        qc.append(subqc.to_instruction({theta: gamma}, mock_sel), [qr2[2], qr2[3]])
 
         dag = circuit_to_dag(qc)
         pass_ = SynthesizeUnitaries(sel)
         dag = pass_.run(dag)
 
-        out_dag = BasisTranslator(sel, ['u1', 'cx']).run(dag)
+        out_dag = BasisTranslator(mock_sel, ['u1', 'cx']).run(dag)
 
         expected = QuantumCircuit(qr2)
         expected.u1(phi, qr2[0])
