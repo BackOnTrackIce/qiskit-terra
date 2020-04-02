@@ -578,7 +578,7 @@ class QuantumCircuit:
         if not all(self.has_register(i.register) for i in cargs):
             raise CircuitError("register not in this circuit")
 
-    def to_instruction(self, parameter_map=None):
+    def to_instruction(self, parameter_map=None, equivalence_library=None):
         """Create an Instruction out of this circuit.
 
         Args:
@@ -586,15 +586,19 @@ class QuantumCircuit:
                parameters in the circuit to parameters to be used in the
                instruction. If None, existing circuit parameters will also
                parameterize the instruction.
+            equivalence_library (EquivalenceLibrary): Optional equivalence
+               library where the converted instruction will be registered.
+               The default is
+               qiskit.circuit.equivalence_library.SessionEquivalenceLibrary.
 
         Returns:
             qiskit.circuit.Instruction: a composite instruction encapsulating this circuit
             (can be decomposed back)
         """
         from qiskit.converters.circuit_to_instruction import circuit_to_instruction
-        return circuit_to_instruction(self, parameter_map)
+        return circuit_to_instruction(self, parameter_map, equivalence_library)
 
-    def to_gate(self, parameter_map=None):
+    def to_gate(self, parameter_map=None, equivalence_library=None):
         """Create a Gate out of this circuit.
 
         Args:
@@ -602,13 +606,17 @@ class QuantumCircuit:
                parameters in the circuit to parameters to be used in the
                gate. If None, existing circuit parameters will also
                parameterize the gate.
+            equivalence_library (EquivalenceLibrary): Optional equivalence
+               library where the converted gate will be registered.
+               The default is
+               qiskit.circuit.equivalence_library.SessionEquivalenceLibrary.
 
         Returns:
             Gate: a composite gate encapsulating this circuit
             (can be decomposed back)
         """
         from qiskit.converters.circuit_to_gate import circuit_to_gate
-        return circuit_to_gate(self, parameter_map)
+        return circuit_to_gate(self, parameter_map, equivalence_library)
 
     def decompose(self):
         """Call a decomposition pass on this circuit,

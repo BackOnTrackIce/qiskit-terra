@@ -19,7 +19,7 @@ from qiskit.circuit.quantumregister import QuantumRegister, Qubit
 from qiskit.exceptions import QiskitError
 
 
-def circuit_to_gate(circuit, parameter_map=None):
+def circuit_to_gate(circuit, parameter_map=None, equivalence_library=None):
     """Build a ``Gate`` object from a ``QuantumCircuit``.
 
     The gate is anonymous (not tied to a named quantum register),
@@ -32,6 +32,9 @@ def circuit_to_gate(circuit, parameter_map=None):
            parameters in the circuit to parameters to be used in the gate.
            If None, existing circuit parameters will also parameterize the
            Gate.
+        equivalence_library (EquivalenceLibrary): Optional equivalence library
+           where the converted gate will be registered. The default is
+           qiskit.circuit.equivalence_library.SessionEquivalenceLibrary.
 
     Raises:
         QiskitError: if circuit is non-unitary or if
@@ -80,10 +83,13 @@ def circuit_to_gate(circuit, parameter_map=None):
 
     target = circuit.assign_parameters(parameter_dict, inplace=False)
 
-    # pylint: disable=cyclic-import
-    from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
-    # pylint: enable=cyclic-import
-    sel.add_equivalence(gate, target)
+    if equivalence_library is None:
+        # pylint: disable=cyclic-import
+        from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
+        # pylint: enable=cyclic-import
+        equivalence_library = sel
+
+    equivalence_library.add_equivalence(gate, target)
 
     definition = target.data
 
