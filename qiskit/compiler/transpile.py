@@ -30,7 +30,6 @@ from qiskit.circuit.quantumregister import Qubit
 from qiskit import user_config
 from qiskit.transpiler.exceptions import TranspilerError
 from qiskit.converters import isinstanceint, isinstancelist
-from qiskit.transpiler.passes.basis.ms_basis_decomposer import MSBasisDecomposer
 from qiskit.transpiler.preset_passmanagers import (level_0_pass_manager,
                                                    level_1_pass_manager,
                                                    level_2_pass_manager,
@@ -273,18 +272,6 @@ def _transpile_circuit(circuit_config_tuple: Tuple[QuantumCircuit, Dict]) -> Qua
 
     pass_manager_config = transpile_config['pass_manager_config']
 
-    # Workaround for ion trap support: If basis gates includes
-    # Mølmer-Sørensen (rxx) and the circuit includes gates outside the basis,
-    # first unroll to u3, cx, then run MSBasisDecomposer to target basis.
-    basic_insts = ['measure', 'reset', 'barrier', 'snapshot']
-    device_insts = set(pass_manager_config.basis_gates).union(basic_insts)
-    ms_basis_swap = None
-    if 'rxx' in pass_manager_config.basis_gates and \
-            not device_insts >= circuit.count_ops().keys():
-        ms_basis_swap = pass_manager_config.basis_gates
-        pass_manager_config.basis_gates = list(
-            set(['u3', 'cx']).union(pass_manager_config.basis_gates))
-
     # we choose an appropriate one based on desired optimization level
     level = transpile_config['optimization_level']
 
@@ -298,9 +285,6 @@ def _transpile_circuit(circuit_config_tuple: Tuple[QuantumCircuit, Dict]) -> Qua
         pass_manager = level_3_pass_manager(pass_manager_config)
     else:
         raise TranspilerError("optimization_level can range from 0 to 3.")
-
-    if ms_basis_swap is not None:
-        pass_manager.append(MSBasisDecomposer(ms_basis_swap))
 
     return pass_manager.run(circuit, callback=transpile_config['callback'],
                             output_name=transpile_config['output_name'])
