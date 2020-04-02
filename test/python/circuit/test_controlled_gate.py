@@ -508,6 +508,7 @@ class TestControlledGate(QiskitTestCase):
         self.log.info('%s gate count: %d', uqc.name, uqc.size())
         self.assertTrue(uqc.size() <= 93)  # this limit could be changed
 
+    @unittest.skip
     @combine(num_controls=[1, 2, 4],
              base_gate_name=['x', 'y', 'z'],
              use_basis_gates=[True, False])
