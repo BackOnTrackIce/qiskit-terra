@@ -155,3 +155,6 @@ from .utils import RemoveFinalMeasurements
 from .utils import MergeAdjacentBarriers
 from .utils import DAGFixedPoint
 from .utils import FixedPoint
+
+# Synthesis
+from .synthesis import SynthesizeUnitaries
