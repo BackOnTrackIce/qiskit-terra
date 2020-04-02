@@ -506,3 +506,20 @@ class TestUnrollerCompatability(QiskitTestCase):
         expected.u1(gamma, qr2[3])
 
         self.assertEqual(circuit_to_dag(expected), out_dag)
+
+        # KDK This test fails (only under make test) because somewhere, we're inserting into the sel
+        # a 0-parameter definition for RzGate (_base still has the correct definition)
+        # - short term: to_instruction to take an eq_lib, and test only using that
+        # - long term: validate added entry consistent with existing entries
+        # (Pdb) print(self._equiv_lib._map['rz', 1].equivalences[0].circuit)
+        #            ┌──────────┐
+        # q437_0: |0>┤ U1(pi/2) ├
+        #            └──────────┘
+        # (Pdb) print(self._equiv_lib._base._map['rz', 1])
+        # Entry(search_base=True, equivalences=[Equivalence(params=[Parameter(theta)], circuit=<qiskit.circuit.quantumcircuit.QuantumCircuit object at 0x12c73b358>)])
+        # (Pdb) print(self._equiv_lib._base._map['rz', 1]).equivalences[0].circuit)
+        # *** SyntaxError: invalid syntax
+        # (Pdb) print(self._equiv_lib._base._map['rz', 1].equivalences[0].circuit)
+        #         ┌───────────┐
+        # q_0: |0>┤ U1(theta) ├
+        #         └───────────┘
