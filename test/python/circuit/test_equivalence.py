@@ -127,6 +127,12 @@ class TestEquivalenceLibraryWithoutBase(QiskitTestCase):
         with self.assertRaises(CircuitError):
             eq_lib.add_equivalence(gate, equiv)
 
+    def test_has_entry(self):
+        pass
+
+    def test_has_not_entry(self):
+        pass
+
 
 class TestEquivalenceLibraryWithBase(QiskitTestCase):
     """Test cases for EquivalenceLibrary with base library."""
@@ -203,6 +209,13 @@ class TestEquivalenceLibraryWithBase(QiskitTestCase):
 
         self.assertEqual(len(entry), 1)
         self.assertEqual(entry[0], second_equiv)
+
+    def test_has_entry_in_base(self):
+        pass
+
+    def test_has_not_entry_in_base(self):
+        pass
+
 
 
 class TestEquivalenceLibraryWithParameters(QiskitTestCase):

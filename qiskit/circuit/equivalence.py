@@ -74,6 +74,21 @@ class EquivalenceLibrary():
 
         self._map[key].equivalences.append(equiv)
 
+    def has_entry(self, gate):
+        """
+
+        Args:
+            gate (Gate): A Gate instance.
+
+        Returns:
+            Bool: True if 
+        """
+
+        key = Key(name=gate.name,
+                  num_qubits=gate.num_qubits)
+
+        return key in self._map or (key in self._base._map if self._base is not None else False)
+        
     def set_entry(self, gate, entry):
         """Set the equivalence record for a Gate. Future queries for the Gate
         will return only the circuits provided.
