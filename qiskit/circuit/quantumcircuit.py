@@ -45,6 +45,7 @@ try:
 except ImportError:
     HAS_PYGMENTS = False
 
+_session_circuit_names = set()
 
 class QuantumCircuit:
     """Create a new circuit.
@@ -141,6 +142,7 @@ class QuantumCircuit:
                 raise CircuitError("Circuit args must be Registers or be castable to an int" +
                                    "(%s '%s' was provided)"
                                    % ([type(reg).__name__ for reg in regs], regs))
+        self._name = None
         if name is None:
             name = self.cls_prefix() + str(self.cls_instances())
             if sys.platform != "win32" and not is_main_process():
@@ -1009,6 +1011,19 @@ class QuantumCircuit:
 
         """
         return sum(reg.size for reg in self.qregs + self.cregs)
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name_input):
+        if name_input in _session_circuit_names:
+            warnings.warn('Duplicate circuit name {}'.format(name_input),
+                         stacklevel=2)
+        else:
+            _session_circuit_names.add(name_input)
+        self._name = name_input
 
     @property
     def num_qubits(self):

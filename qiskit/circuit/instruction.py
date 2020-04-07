@@ -45,7 +45,14 @@ from qiskit.circuit.parameter import ParameterExpression
 
 _CUTOFF_PRECISION = 1E-10
 
+_session_instruction_names = {}
 
+# Would have to wait for #3947 (because we don't know the name yet).
+# class InstructionMeta(type):
+#     def __init__(cls, clsname, bases, dct):
+#         return super(InstructionMeta, cls).__init__(clsname, bases, dct)
+
+#class Instruction(metaclass=InstructionMeta):
 class Instruction:
     """Generic quantum instruction."""
 
@@ -127,6 +134,17 @@ class Instruction:
     def _define(self):
         """Populates self.definition with a decomposition of this gate."""
         pass
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, name_input):
+        if (name_input in _session_instruction_names
+            and _session_instruction_names[name_input] is not type(self)):
+            warnings.warn('Duplicate instruction name {}'.format(name_input))
+        self._name = name_input
 
     @property
     def params(self):
