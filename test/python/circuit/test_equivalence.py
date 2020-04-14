@@ -414,3 +414,97 @@ class TestSessionEquivalenceLibrary(QiskitTestCase):
 
         self.assertEqual(len(decomps), 1)
         self.assertEqual(decomps[0], qc2)
+
+class TestEquivalenceLibraryValidation(QiskitTestCase):
+    """Test cases for SessionEquivalenceLibrary."""
+
+    def test_adding_wrong_no_param_equivalence_raises(self):
+        """"""
+        eq_lib = EquivalenceLibrary()
+
+        gate = OneQubitZeroParamGate()
+        first_equiv = QuantumCircuit(1)
+        first_equiv.h(0)
+
+        eq_lib.add_equivalence(gate, first_equiv)
+
+        second_equiv = QuantumCircuit(1)
+        second_equiv.u2(0, np.pi, 0)
+
+        eq_lib.set_entry(gate, [second_equiv])
+
+        entry = eq_lib.get_entry(gate)
+
+        self.assertEqual(len(entry), 1)
+        self.assertEqual(entry[0], second_equiv)
+
+    def test_adding_wrong_is_okay_if_validate_is_false(self):
+        """"""
+        pass
+
+    def test_adding_wrong_param_equivalence_raises(self):
+        """"""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+
+        gate = qc.to_gate()
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 1)
+        self.assertEqual(decomps[0], qc)
+
+        qc2 = QuantumCircuit(2)
+        qc2.h([0, 1])
+        qc2.cz(0, 1)
+        qc2.h(1)
+
+        gate.add_decomposition(qc2)
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 2)
+        self.assertEqual(decomps[0], qc)
+        self.assertEqual(decomps[1], qc2)
+
+        gate.decompositions = [qc2]
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 1)
+        self.assertEqual(decomps[0], qc2)
+
+    def test_adding_wrong_mis_param_equivalence_raises(self):
+        """e.g if I have a 2 param gate, and add a 1 param version, but its wrong (or vice versa)"""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+
+        gate = qc.to_gate()
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 1)
+        self.assertEqual(decomps[0], qc)
+
+        qc2 = QuantumCircuit(2)
+        qc2.h([0, 1])
+        qc2.cz(0, 1)
+        qc2.h(1)
+
+        gate.add_decomposition(qc2)
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 2)
+        self.assertEqual(decomps[0], qc)
+        self.assertEqual(decomps[1], qc2)
+
+        gate.decompositions = [qc2]
+
+        decomps = gate.decompositions
+
+        self.assertEqual(len(decomps), 1)
+        self.assertEqual(decomps[0], qc2)
+

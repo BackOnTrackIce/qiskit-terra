@@ -45,7 +45,7 @@ class EquivalenceLibrary():
 
         self._map = {}
 
-    def add_equivalence(self, gate, equivalent_circuit):
+    def add_equivalence(self, gate, equivalent_circuit, validate=True):
         """Add a new equivalence to the library. Future queries for the Gate
         will include the given circuit, in addition to all existing equivalences
         (including those from base).
@@ -71,6 +71,30 @@ class EquivalenceLibrary():
 
         if key not in self._map:
             self._map[key] = Entry(search_base=True, equivalences=[])
+
+        existing_equivs = self._get_equivalences(key)
+
+        for existing_equiv in existing_equivs:
+            from qiskit.quantum_info import Operator
+            from numpy.random import random_sample
+
+            pes = [(idx, p)
+                   for idx, p in enumerate(existing_equiv.params)
+                   if isinstance(p, ParameterExpression)]
+
+            test_p_vals = random_sample(len(pes)) * 2*np.pi
+
+            test_op = Operator(_rebind_equiv(equiv, test_p_vals))
+            test_exist_op = Operator(_rebind_equiv(existing_equiv, test_p_vals))
+
+            if test_op != test_exist_op:
+                if validate:
+                    raise CircuitError(key,
+                                       equiv,
+                                       existing_equiv,
+                                       test_p_vals)
+                else:
+                    warnings.warn('')
 
         self._map[key].equivalences.append(equiv)
 
