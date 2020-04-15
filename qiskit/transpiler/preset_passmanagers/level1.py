@@ -21,6 +21,7 @@ from qiskit.transpiler.passmanager import PassManager
 from qiskit.extensions.standard import SwapGate
 
 from qiskit.transpiler.passes import Unroller
+from qiskit.transpiler.passes import BasisTranslator
 from qiskit.transpiler.passes import Unroll3qOrMore
 from qiskit.transpiler.passes import CXCancellation
 from qiskit.transpiler.passes import Decompose
@@ -38,6 +39,7 @@ from qiskit.transpiler.passes import RemoveResetInZeroState
 from qiskit.transpiler.passes import Optimize1qGates
 from qiskit.transpiler.passes import ApplyLayout
 from qiskit.transpiler.passes import CheckCXDirection
+from qiskit.circuit import SessionEquivalenceLibrary
 
 
 def level_1_pass_manager(transpile_config):
@@ -79,8 +81,8 @@ def level_1_pass_manager(transpile_config):
     # 3. Extend dag/layout with ancillas using the full coupling map
     _embed = [FullAncillaAllocation(coupling_map), EnlargeWithAncilla(), ApplyLayout()]
 
-    # 4. Unroll to the basis
-    _unroll = Unroller(basis_gates)
+    # 4. translate to the basis
+    _basis_translator = BasisTranslator(SessionEquivalenceLibrary,basis_gates)
 
     # 5. Swap to fit the coupling map
     _swap_check = CheckMap(coupling_map)
@@ -118,7 +120,7 @@ def level_1_pass_manager(transpile_config):
         pm1.append(_choose_layout, condition=_choose_layout_condition)
         pm1.append(_layout_check)
         pm1.append(_embed)
-    pm1.append(_unroll)
+    pm1.append(_basis_translator)
     if coupling_map:
         pm1.append(_swap_check)
         pm1.append(_swap, condition=_swap_condition)

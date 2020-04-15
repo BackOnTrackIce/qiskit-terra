@@ -17,6 +17,7 @@
 from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.exceptions import QiskitError
+from warnings import warn
 
 
 class Unroller(TransformationPass):
@@ -38,6 +39,7 @@ class Unroller(TransformationPass):
     def run(self, dag):
         """Run the Unroller pass on `dag`.
 
+
         Args:
             dag (DAGCircuit): input dag
 
@@ -48,6 +50,11 @@ class Unroller(TransformationPass):
         Returns:
             DAGCircuit: output unrolled dag
         """
+
+        """Deprecated: functionality now in basis_translator"""
+        warn("Please use basis_translator in combination with the SessionEquivalenceLibrary instead, " 
+         "unroller in combination with gate.definition will disappear",
+         DeprecationWarning)
         # Walk through the DAG and expand each non-basis node
         for node in dag.op_nodes():
             basic_insts = ['measure', 'reset', 'barrier', 'snapshot']
