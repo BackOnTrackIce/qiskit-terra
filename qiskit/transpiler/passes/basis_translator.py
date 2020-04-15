@@ -12,7 +12,8 @@ from qiskit.transpiler.basepasses import TransformationPass
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.circuit import QuantumRegister, ParameterVector, Gate
 from qiskit.exceptions import QiskitError
-
+from qiskit.converters import circuit_to_dag
+import functools
 logger = logging.getLogger(__name__)
 
 basic_insts = ['measure', 'reset', 'barrier', 'snapshot']
@@ -28,8 +29,8 @@ class BasisTranslator(TransformationPass):
         """
         super().__init__()
 
-        self._equiv_lib = equivalence_library        
-        self._target_basis = target_basis
+        self._equiv_lib = equivalence_library 
+        self._target_basis = frozenset(target_basis)
 
     def run(self, dag):
         """Run the Unroller pass on `dag`.
@@ -43,11 +44,13 @@ class BasisTranslator(TransformationPass):
         Returns:
             DAGCircuit: output unrolled dag
         """
-
+        time1 = time.time()
         target_basis = set(self._target_basis).union(basic_insts)
+        target_basis = frozenset(target_basis)
 
         dag_ops = dag.count_ops()
         source_basis = set(dag_ops.keys())
+        source_basis = frozenset(source_basis)
 
         logger.info('Begin BasisTranslator from source basis {} to target '
                     'basis {}.'.format(source_basis, target_basis))
@@ -83,7 +86,6 @@ class BasisTranslator(TransformationPass):
                 doomed_nodes = empty_dag.named_nodes(src_gate)
                 for node in doomed_nodes:
                     # Need to keep in the loop so we can re-cast params
-                    from qiskit.converters import circuit_to_dag
                     dcc = dest_circ.copy()
                     for dest_param, doomed_param in zip(params, node.op.params):
                         from qiskit.circuit import Parameter
@@ -127,6 +129,8 @@ class BasisTranslator(TransformationPass):
                     dag.substitute_node_with_dag(node, target_dag)
             elif node.name not in target_basis:
                 raise RuntimeError('BasisTranslator did not map {}'.format(node.name))
+        time2 = time.time()
+        print('time for basis translator: ', time2 - time1)        
         return dag
 
 
@@ -139,7 +143,8 @@ def basis_dist(basis, target):
     # each a different function
 
     return len(basis ^ target)
-    
+
+@functools.lru_cache(maxsize=None)
 def basis_search(edge_graph, src_basis, tgt_basis, heuristic):
     # https://networkx.github.io/documentation/stable/_modules/networkx/algorithms/shortest_paths/astar.html
     search_start_time = time.time()
