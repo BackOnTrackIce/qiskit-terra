@@ -109,3 +109,8 @@ class EquivalenceLibrary():
         png = dot.create_png(prog='dot')
 
         return Image.open(io.BytesIO(png))
+
+    def initialize_base(self,map):
+       self._base = EquivalenceLibrary()
+       self._base._map = map
+

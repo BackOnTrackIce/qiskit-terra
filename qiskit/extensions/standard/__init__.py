@@ -44,6 +44,8 @@ from .rzz import RZZGate
 from .rxx import RXXGate
 from .ms import MSGate
 
+from math import pi
+from collections import defaultdict, namedtuple
 from qiskit.circuit.equivalence import EquivalenceLibrary as _cel
 from qiskit.circuit import SessionEquivalenceLibrary
 from inspect import signature
@@ -56,120 +58,291 @@ StandardEquivalenceLibrary = _cel()
 #     if g.__name__ == 'MSGate' or g.__name__ == 'Barrier':
 #         continue
 
-for g in [# #Barrier, # No Barrier, Instruction and variadic
-          ToffoliGate,
-          FredkinGate,
-          CnotGate,
-          CyGate,
-          CzGate,
-          SwapGate,
-          HGate,
-          IdGate,
-          SGate,
-          SdgGate,
-          TGate,
-          TdgGate,
-          U1Gate,
-          U2Gate,
-          U3Gate,
-          XGate,
-          YGate,
-          RGate,
-          RXGate,
-          RYGate,
-          RZGate,
-          Cu1Gate,
-          CHGate,
-          CrzGate,
-          Cu3Gate,
-          RZZGate,
-          RXXGate,
-          #MSGate, # No MSGate, variadic
-]:
-    n_params = len(set(signature(g.__init__).parameters) - {'label', 'self'})
-    th = _pv('th', n_params) # since we're inspecting param name, could re-use already
-    gate = g(*th)
-    n_qubits = gate.num_qubits
-    reg = _qr(n_qubits, 'q')
+# Exclude vari-arity  MSGate, Barrier
+
+# gates = [ g for g in standard.__dict__.values() if type(g) is type and issubclass(g, Gate) ] # Should be Instruction? support cbits? Not a problem in stdlib other than barrier, which is already weird
+# for g in gates:
+#     if g.__name__ == 'MSGate' or g.__name__ == 'Barrier':
+#         continue
+
+#==============================================================================================================
+
+def returnStandardRules():
+    Entry = namedtuple('Entry', ['search_base',
+                                 'equivs'])
+
+    StandardRules = defaultdict(lambda: Entry(True, []))
+
+    reg = _qr(3, 'q')
     circ = _qc(reg)
-    if gate.definition:
-        circ.data.extend(gate.definition)
-        StandardEquivalenceLibrary.add_entry(gate, circ)
+    circ.h(0)
+    circ.cx(1, 2)
+    circ.tdg(2)
+    circ.cx(0, 2)
+    circ.t(2)
+    circ.cx(1, 2)
+    circ.tdg(2)
+    circ.cx(0, 2)
+    circ.t(1)
+    circ.t(2)
+    circ.h(2)
+    circ.cx(0, 1)
+    circ.t(0)
+    circ.tdg(1)
+    circ.cx(0, 1)
+    gate = ToffoliGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-# MS, upto n _qubits
-for n_qubits in range(2, 13):
-    g = MSGate
-    n_params = 1
-    th = _pv('th', n_params) # since we're inspecting param name, could re-use already
-    gate = g(n_qubits, *th)
-    n_qubits = gate.num_qubits
-    reg = _qr(n_qubits, 'q')
+    reg = _qr(3, 'q')
     circ = _qc(reg)
-    if gate.definition:
-        circ.data.extend(gate.definition)
-        StandardEquivalenceLibrary.add_entry(gate, circ)
+    circ.cx(2, 1)
+    circ.ccx(0, 1, 2)
+    circ.cx(2, 1)
+    gate = FredkinGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-## Add further identities.
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    circ.sdg(1)
+    circ.cx(0, 1)
+    circ.s(1)
+    gate = CyGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-reg = _qr(2, 'q')
-circ = _qc(reg)
-circ.h(1)
-circ.cz(0,1)
-circ.h(1)
-StandardEquivalenceLibrary.add_entry(CnotGate(), circ)
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    circ.h(1)
+    circ.cx(0, 1)
+    circ.h(1)
+    gate = CzGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-from math import pi
-reg = _qr(1, 'q')
-circ = _qc(reg)
-p = _pv('th', 3)
-circ.rz(p[0], 0)
-circ.rx(pi/2, 0)
-circ.rz(p[1]+pi, 0)
-circ.rx(pi/2, 0)
-circ.rz(p[2]+pi, 0)
-StandardEquivalenceLibrary.add_entry(U3Gate(*p), circ)
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    circ.cx(0, 1)
+    circ.cx(1, 0)
+    circ.cx(0, 1)
+    gate = SwapGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-# #cnot_through_xx = qc, 1603.07678.pdf fig 1
-# # v binary vector, Implementation of the CNOT gate using physical-level gates, where s = ±1 is the sign of the interaction parameter χ, specified by the ions the gate applies to (s is a parameter that cannot be varied), and v = ±1 may be chosen arbitrarily.
-# reg = _qr(2, 'q')
-# circ = _qc(reg)
-# v = _pv('th', 2)
-# circ.ry(v[0]*pi/2, 0)
-# circ.rxx(v[1]*pi/4, 0, 1)
-# circ.rx(-v[1]*pi/2, 0)
-# circ.rx(-v[0]*v[1]*pi/2)
-# circ.ry(-v[0]*pi/2)
-# StandardEquivalenceLibrary.add_entry(CnotGate(), circ)
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u2(0, pi, 0)
+    gate = HGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-# (define-compiler CNOT-to-iSWAP ((cnot-gate ("CNOT" () q0 q1)))
-#   (inst "RZ"    '(#.-pi/2) q0)
-#   (inst "Z"     ()         q0)
-#   (inst "Z"     ()         q1)
-#   (inst "ISWAP" ()         q0 q1)
-#   (inst "RY"    '(#.-pi/2) q0)
-#   (inst "ISWAP" ()         q0 q1)
-#   (inst "RX"    '(#.-pi/2) q1))
-# cnot_through_iswap = qc
-# q_t_i.ry(1)
-# q_t_i.sqrt_swap(0,1)
-# q_t_i.z(0)
-# q_t_i.sqrt_swap(0,1)
-# q_t_i.-rz(1)
-# q_t_i.-rz(0)
-# q_t_i.-ry(1)
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u1(pi / 2, 0)
+    gate = SGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-#https://github.com/QISKit/openqasm/blob/master/examples/ibmqx2/iswap.qasm
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u1(- pi / 2, 0)
+    gate = SdgGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u1(pi / 4, 0)
+    gate = TGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u1(- pi / 4, 0)
+    gate = TdgGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.u3(0, 0, p[0], 0)
+    gate = U1Gate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 2)
+    circ.u3(pi / 2, p[0], p[1], 0)
+    gate = U2Gate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u3(pi, 0, pi, 0)
+    gate = XGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    circ.u3(pi, pi/2, pi/2, 0)
+    gate = YGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 2)
+    circ.u3(p[0], p[1] - pi / 2, -p[1] + pi / 2, 0)
+    gate = RGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.r(p[0], 0, 0)
+    gate = RXGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.r(p[0], pi/2, 0)
+    gate = RYGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.u1(p[0], 0)
+    gate = RZGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.u1(p[0] / 2, 0)
+    circ.cx(0, 1)
+    circ.u1(-p[0] / 2, 1),
+    circ.cx(0, 1)
+    circ.u1(p[0] / 2, 1)
+    gate = Cu1Gate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    circ.s(1)
+    circ.h(1)
+    circ.t(1)
+    circ.cx(0, 1)
+    circ.tdg(1)
+    circ.h(1)
+    circ.sdg(1)
+    gate = CHGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.u1(p[0] / 2, 1)
+    circ.cx(0, 1)
+    circ.u1(-p[0] / 2, 1)
+    circ.cx(0, 1)
+    gate = CrzGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 3)
+    circ.u1((p[2] + p[1]) / 2, 0)
+    circ.u1((p[2] - p[1]) / 2, 1)
+    circ.cx(0, 1)
+    circ.u3(-p[0] / 2, 0, -(p[1] + p[2]) / 2, 1)
+    circ.cx(0, 1)
+    circ.u3(p[0] / 2, p[1], 0, 1)
+    gate = Cu3Gate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.u3(pi / 2, p[0], 0, 0)
+    circ.h(1)
+    circ.cx(0, 1)
+    circ.u1(-p[0], 1),
+    circ.cx(0, 1)
+    circ.h(1)
+    circ.u2(-pi, pi - p[0], 0)
+    gate = RXXGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
+
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 1)
+    circ.cx(0, 1)
+    circ.u1(p[0], 1)
+    circ.cx(0, 1)
+    gate = RZZGate(*p)
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
 
-#https://www.mathstat.dal.ca/~selinger/quipper/doc/src/QuipperLib/GateDecompositions.html#line-53
+    for n_qubits in range(2, 13):
+        reg = _qr(n_qubits, 'q')
+        circ = _qc(reg)
+        th = _pv('th', 1)  # since we're inspecting param name, could re-use already
+        gate = MSGate(n_qubits, *th)
+        for i in range(n_qubits):
+            for j in range(i + 1, n_qubits):
+                circ.u3(pi / 2, p[0], 0, i)
+                circ.h(j)
+                circ.cx(i, j)
+                circ.u1(-p[0], j),
+                circ.cx(i, j)
+                circ.h(j)
+                circ.u2(-pi, pi - p[0], i)
 
-# NC has several decompositions of Toffoli
+        StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+            (gate.params, circ.copy()))
 
-# # A catch, for gates, params are ordered (and thus so are Parameters)
-# # But for circuits they're unordered
+    reg = _qr(2, 'q')
+    circ = _qc(reg)
+    circ.h(1)
+    circ.cz(0, 1)
+    circ.h(1)
+    gate = CnotGate()
+    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
+        (gate.params, circ.copy()))
 
-## MS, CX, CZ, CR, iSWAP, CPhase
 
-SessionEquivalenceLibrary._base= StandardEquivalenceLibrary
+    reg = _qr(1, 'q')
+    circ = _qc(reg)
+    p = _pv('th', 3)
+    circ.rz(p[0], 0)
+    circ.rx(pi / 2, 0)
+    circ.rz(p[1] + pi, 0)
+    circ.rx(pi / 2, 0)
+    circ.rz(p[2] + pi, 0)
+    StandardRules[(U3Gate(*p).label, U3Gate(*p).name, U3Gate(*p).num_qubits)].equivs.append(
+        (U3Gate(*p).params, circ.copy()))
+
+    return StandardRules
+
+
+SessionEquivalenceLibrary.initialize_base(returnStandardRules())
 
 
