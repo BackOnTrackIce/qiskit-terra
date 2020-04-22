@@ -23,6 +23,15 @@ from .instruction import Instruction
 
 class Gate(Instruction):
     """Unitary gate."""
+    _subclasses = []
+
+    @classmethod
+    def get_gate_register(cls):
+        return list(cls._subclasses)
+
+    def __init_subclass__(cls, isStandard = True):
+        if isStandard == True:
+         Gate._subclasses.append(cls)
 
     def __init__(self, name, num_qubits, params, label=None):
         """Create a new gate.
