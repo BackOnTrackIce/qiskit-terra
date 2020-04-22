@@ -45,9 +45,14 @@ class Unroller(TransformationPass):
             QiskitError: if unable to unroll given the basis due to undefined
             decomposition rules (such as a bad basis) or excessive recursion.
 
-        Returns:
-            DAGCircuit: output unrolled dag
-        """
+         Returns:
+             DAGCircuit: output unrolled dag
+         """
+
+        """Deprecated: functionality now in basis_translator"""
+        warn("Please use basis_translator in combination with the SessionEquivalenceLibrary instead, " 
+         "unroller in combination with gate.definition will disappear",
+         DeprecationWarning)
         # Walk through the DAG and expand each non-basis node
         for node in dag.op_nodes():
             basic_insts = ['measure', 'reset', 'barrier', 'snapshot']
