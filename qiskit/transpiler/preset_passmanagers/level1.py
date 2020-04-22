@@ -20,7 +20,7 @@ Level 1 pass manager: light optimization by simple adjacent gate collapsing.
 from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.passmanager import PassManager
 
-from qiskit.transpiler.passes import Unroller
+from qiskit.transpiler.passes.basis import BasisTranslator
 from qiskit.transpiler.passes import Unroll3qOrMore
 from qiskit.transpiler.passes import CXCancellation
 from qiskit.transpiler.passes import CheckMap
@@ -78,6 +78,7 @@ def level_1_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
     routing_method = pass_manager_config.routing_method or 'stochastic'
     seed_transpiler = pass_manager_config.seed_transpiler
     backend_properties = pass_manager_config.backend_properties
+    equivalence_library = pass_manager_config.equivalence_library
 
     # 1. Use trivial layout if no layout given
     _given_layout = SetLayout(initial_layout)
@@ -126,7 +127,7 @@ def level_1_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
         raise TranspilerError("Invalid routing method %s." % routing_method)
 
     # 6. Unroll to the basis
-    _unroll = Unroller(basis_gates)
+    _basis_translator = BasisTranslator(equivalence_library,basis_gates)
 
     # 7. Fix any bad CX directions
     _direction_check = [CheckCXDirection(coupling_map)]
@@ -157,7 +158,7 @@ def level_1_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
         pm1.append(_unroll3q)
         pm1.append(_swap_check)
         pm1.append(_swap, condition=_swap_condition)
-    pm1.append(_unroll)
+    pm1.append(_basis_translator)
     if coupling_map and not coupling_map.is_symmetric:
         pm1.append(_direction_check)
         pm1.append(_direction, condition=_direction_condition)

@@ -21,7 +21,7 @@ gate cancellation using commutativity rules and unitary synthesis.
 from qiskit.transpiler.passmanager_config import PassManagerConfig
 from qiskit.transpiler.passmanager import PassManager
 
-from qiskit.transpiler.passes import Unroller
+from qiskit.transpiler.passes.basis import BasisTranslator
 from qiskit.transpiler.passes import Unroll3qOrMore
 from qiskit.transpiler.passes import CheckMap
 from qiskit.transpiler.passes import CXDirection
@@ -85,9 +85,11 @@ def level_3_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
     routing_method = pass_manager_config.routing_method or 'stochastic'
     seed_transpiler = pass_manager_config.seed_transpiler
     backend_properties = pass_manager_config.backend_properties
+    equivalence_library = pass_manager_config.equivalence_library
+
 
     # 1. Unroll to the basis first, to prepare for noise-adaptive layout
-    _unroll = Unroller(basis_gates)
+    _basis_translator = BasisTranslator(equivalence_library,basis_gates)
 
     # 2. Layout on good qubits if calibration info available, otherwise on dense links
     _given_layout = SetLayout(initial_layout)
@@ -146,7 +148,7 @@ def level_3_pass_manager(pass_manager_config: PassManagerConfig) -> PassManager:
 
     # Build pass manager
     pm3 = PassManager()
-    pm3.append(_unroll)
+    pm1.append(_basis_translator)
     if coupling_map:
         pm3.append(_given_layout)
         pm3.append(_choose_layout_1, condition=_choose_layout_condition)
