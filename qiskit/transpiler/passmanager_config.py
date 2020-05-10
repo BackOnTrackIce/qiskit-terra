@@ -26,7 +26,8 @@ class PassManagerConfig:
                  layout_method=None,
                  routing_method=None,
                  backend_properties=None,
-                 seed_transpiler=None):
+                 seed_transpiler=None,
+                 equivalence_library=None):
         """Initialize a PassManagerConfig object
 
         Args:
@@ -52,3 +53,4 @@ class PassManagerConfig:
         self.routing_method = routing_method
         self.backend_properties = backend_properties
         self.seed_transpiler = seed_transpiler
+        self.equivalence_library = equivalence_library

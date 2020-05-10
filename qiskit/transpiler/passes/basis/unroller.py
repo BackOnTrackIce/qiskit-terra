@@ -47,9 +47,9 @@ class Unroller(TransformationPass):
             QiskitError: if unable to unroll given the basis due to undefined
             decomposition rules (such as a bad basis) or excessive recursion.
 
-        Returns:
-            DAGCircuit: output unrolled dag
-        """
+         Returns:
+             DAGCircuit: output unrolled dag
+         """
 
         """Deprecated: functionality now in basis_translator"""
         warn("Please use basis_translator in combination with the SessionEquivalenceLibrary instead, " 

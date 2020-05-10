@@ -21,6 +21,7 @@ from qiskit.circuit.quantumcircuit import QuantumCircuit
 from qiskit.providers import BaseBackend
 from qiskit.providers.models import BackendProperties
 from qiskit.transpiler import Layout, CouplingMap, PropertySet, PassManager
+from qiskit.circuit import EquivalenceLibrary
 from qiskit.transpiler.basepasses import BasePass
 from qiskit.dagcircuit import DAGCircuit
 from qiskit.tools.parallel import parallel_map
@@ -52,6 +53,7 @@ def transpile(circuits: Union[QuantumCircuit, List[QuantumCircuit]],
               pass_manager: Optional[PassManager] = None,
               callback: Optional[Callable[[BasePass, DAGCircuit, float,
                                            PropertySet, int], Any]] = None,
+              equivalence_library: Optional[EquivalenceLibrary] = None,
               output_name: Optional[Union[str, List[str]]] = None) -> Union[QuantumCircuit,
                                                                             List[QuantumCircuit]]:
     """Transpile one or more circuits, according to some desired transpilation targets.
@@ -167,6 +169,8 @@ def transpile(circuits: Union[QuantumCircuit, List[QuantumCircuit]],
             or errors in passes
     """
     circuits = circuits if isinstance(circuits, list) else [circuits]
+    if equivalence_library is None:
+     equivalence_library.initialize_base(returnStandardRules())
 
     # transpiling schedules is not supported yet.
     start_time = time()
@@ -202,7 +206,7 @@ def transpile(circuits: Union[QuantumCircuit, List[QuantumCircuit]],
                                            backend_properties, initial_layout,
                                            layout_method, routing_method,
                                            seed_transpiler, optimization_level,
-                                           callback, output_name)
+                                           callback, output_name, equivalence_library)
 
     _check_circuits_coupling_map(circuits, transpile_args, backend)
 
@@ -310,7 +314,7 @@ def _parse_transpile_args(circuits, backend,
                           basis_gates, coupling_map, backend_properties,
                           initial_layout, layout_method, routing_method,
                           seed_transpiler, optimization_level,
-                          callback, output_name) -> List[Dict]:
+                          callback, output_name, equivalence_library) -> List[Dict]:
     """Resolve the various types of args allowed to the transpile() function through
     duck typing, overriding args, etc. Refer to the transpile() docstring for details on
     what types of inputs are allowed.
@@ -339,19 +343,21 @@ def _parse_transpile_args(circuits, backend,
     optimization_level = _parse_optimization_level(optimization_level, num_circuits)
     output_name = _parse_output_name(output_name, circuits)
     callback = _parse_callback(callback, num_circuits)
+    equivalence_library = _parse_equivalence_library(equivalence_library, num_circuits)
 
     list_transpile_args = []
     for args in zip(basis_gates, coupling_map, backend_properties,
                     initial_layout, layout_method, routing_method,
                     seed_transpiler, optimization_level,
-                    output_name, callback):
+                    output_name, callback, equivalence_library):
         transpile_args = {'pass_manager_config': PassManagerConfig(basis_gates=args[0],
                                                                    coupling_map=args[1],
                                                                    backend_properties=args[2],
                                                                    initial_layout=args[3],
                                                                    layout_method=args[4],
                                                                    routing_method=args[5],
-                                                                   seed_transpiler=args[6]),
+                                                                   seed_transpiler=args[6],
+                                                                   equivalence_library=args[10]),
                           'optimization_level': args[7],
                           'output_name': args[8],
                           'callback': args[9]}
@@ -469,6 +475,10 @@ def _parse_pass_manager(pass_manager, num_circuits):
         pass_manager = [pass_manager] * num_circuits
     return pass_manager
 
+def _parse_equivalence_library(equivalence_library, num_circuits):
+    if not isinstance(equivalence_library, list):
+        equivalence_library = [equivalence_library] * num_circuits
+    return equivalence_library
 
 def _parse_callback(callback, num_circuits):
     if not isinstance(callback, list):
