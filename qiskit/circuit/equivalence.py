@@ -141,6 +141,10 @@ class EquivalenceLibrary():
 
         return self._base.get_entry(gate)
 
+    def initialize_base(self,map):
+       self._base = EquivalenceLibrary()
+       self._base._map = map
+
 
 def _raise_if_param_mismatch(gate_params, circuit_parameters):
     gate_parameters = [p for p in gate_params
@@ -171,3 +175,6 @@ def _rebind_equiv(equiv, query_params):
     equiv = equiv_circuit.assign_parameters(param_map, inplace=False)
 
     return equiv
+
+
+
