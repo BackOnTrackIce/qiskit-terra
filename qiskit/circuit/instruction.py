@@ -138,7 +138,7 @@ class Instruction:
         self._params = []
         for single_param in parameters:
             # example: u2(pi/2, sin(pi/4))
-            if isinstance(single_param, (ParameterExpression)):
+            if isinstance(single_param, ParameterExpression):
                 self._params.append(single_param)
             # example: u3(0.1, 0.2, 0.3)
             elif isinstance(single_param, (int, float)):
