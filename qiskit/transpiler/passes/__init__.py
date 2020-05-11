@@ -121,6 +121,7 @@ from .routing import StochasticSwap
 # basis change
 from .basis import Decompose
 from .basis import Unroller
+from .basis import BasisTranslator
 from .basis import Unroll3qOrMore
 
 # optimization

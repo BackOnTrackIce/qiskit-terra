@@ -16,5 +16,6 @@
 
 from .decompose import Decompose
 from .unroller import Unroller
+from .basis_translator import BasisTranslator
 from .unroll_3q_or_more import Unroll3qOrMore
 from .basis_translator import BasisTranslator

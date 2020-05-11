@@ -14,9 +14,13 @@ from qiskit.circuit import QuantumRegister, ParameterVector, Gate
 from qiskit.exceptions import QiskitError
 from qiskit.converters import circuit_to_dag
 import functools
+from collections import namedtuple
 logger = logging.getLogger(__name__)
 
 basic_insts = ['measure', 'reset', 'barrier', 'snapshot']
+
+Key = namedtuple('Key', ['name',
+                         'num_qubits'])
 
 
 class BasisTranslator(TransformationPass):
@@ -90,7 +94,7 @@ class BasisTranslator(TransformationPass):
                     for dest_param, doomed_param in zip(params, node.op.params):
                         from qiskit.circuit import Parameter
                         if isinstance(doomed_param, Parameter):
-                            dcc._substitute_parameters({dest_param: doomed_param})
+                            dcc._substitute_parameter(dest_param, doomed_param)
                         else:
                             dcc._bind_parameter(dest_param, float(doomed_param))
                     dest_dag = circuit_to_dag(dcc)
@@ -118,9 +122,7 @@ class BasisTranslator(TransformationPass):
                 # need to dag -> circ -> dag to bind params :(
                 from qiskit.converters import dag_to_circuit
                 target_circuit = dag_to_circuit(target_dag)
-                target_circuit._substitute_parameters({abs_param: node_param
-                                                       for abs_param, node_param
-                                                       in zip()})
+
                 target_dag = circuit_to_dag(target_circuit)
                 
                 if len(target_dag.op_nodes()) == 1 and len(target_dag.op_nodes()[0].qargs) == len(node.qargs):
@@ -250,8 +252,9 @@ def _get_raw_entry(el, gate):
 
     """
 
-    if (gate.label, gate.name, gate.num_qubits) in el._map:
-        search_base, equivs = el._map[gate.label, gate.name, gate.num_qubits]
+    if (Key(gate.name,gate.num_qubits)) in el._map:
+        entry = el._map[Key(gate.name,gate.num_qubits)]
+        search_base, equivs = entry
 
         if search_base and el._base is not None:
             return equivs + el._base.get_entry(gate)
