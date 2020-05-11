@@ -43,6 +43,7 @@ from qiskit.transpiler.passes import Optimize1qGates
 from qiskit.transpiler.passes import ApplyLayout
 from qiskit.transpiler.passes import CheckCXDirection
 from qiskit.circuit import SessionEquivalenceLibrary
+from qiskit.transpiler.passes import Layout2qDistance
 
 from qiskit.transpiler import TranspilerError
 

@@ -65,12 +65,23 @@ from inspect import signature
 from qiskit.circuit import ParameterVector as _pv, QuantumCircuit as _qc, QuantumRegister as _qr
 
 def returnStandardRules():
-    Entry = namedtuple('Entry', ['search_base',
-                                 'equivs'])
 
-    StandardRules = defaultdict(lambda: Entry(True, []))
+    Key = namedtuple('Key', ['name',
+                             'num_qubits'])
+
+    Entry = namedtuple('Entry', ['search_base',
+                                 'equivalences'])
+
+    Equivalence = namedtuple('Equivalence', ['params',  # Ordered to match Gate.params
+                                             'circuit'])
+
+    StandardRules = {}
 
     reg = _qr(3, 'q')
+    circ = _qc(reg)
+    circ.h(0)
+    circ.cx(1, 2)
+    circ.tdg(2)
     circ.cx(0, 2)
     circ.t(2)
     circ.cx(1, 2)
@@ -84,8 +95,15 @@ def returnStandardRules():
     circ.tdg(1)
     circ.cx(0, 1)
     gate = ToffoliGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
+
 
     reg = _qr(3, 'q')
     circ = _qc(reg)
@@ -93,8 +111,14 @@ def returnStandardRules():
     circ.ccx(0, 1, 2)
     circ.cx(2, 1)
     gate = FredkinGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -102,8 +126,13 @@ def returnStandardRules():
     circ.cx(0, 1)
     circ.s(1)
     gate = CyGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -111,8 +140,13 @@ def returnStandardRules():
     circ.cx(0, 1)
     circ.h(1)
     gate = CzGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -120,105 +154,175 @@ def returnStandardRules():
     circ.cx(1, 0)
     circ.cx(0, 1)
     gate = SwapGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u2(0, pi, 0)
     gate = HGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u1(pi / 2, 0)
     gate = SGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u1(- pi / 2, 0)
     gate = SdgGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u1(pi / 4, 0)
     gate = TGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u1(- pi / 4, 0)
     gate = TdgGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 1)
     circ.u3(0, 0, p[0], 0)
     gate = U1Gate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 2)
     circ.u3(pi / 2, p[0], p[1], 0)
     gate = U2Gate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u3(pi, 0, pi, 0)
     gate = XGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     circ.u3(pi, pi/2, pi/2, 0)
     gate = YGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 2)
     circ.u3(p[0], p[1] - pi / 2, -p[1] + pi / 2, 0)
     gate = RGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 1)
     circ.r(p[0], 0, 0)
     gate = RXGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 1)
     circ.r(p[0], pi/2, 0)
     gate = RYGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(1, 'q')
     circ = _qc(reg)
     p = _pv('th', 1)
     circ.u1(p[0], 0)
     gate = RZGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -229,8 +333,13 @@ def returnStandardRules():
     circ.cx(0, 1)
     circ.u1(p[0] / 2, 1)
     gate = Cu1Gate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -242,8 +351,13 @@ def returnStandardRules():
     circ.h(1)
     circ.sdg(1)
     gate = CHGate()
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -253,8 +367,13 @@ def returnStandardRules():
     circ.u1(-p[0] / 2, 1)
     circ.cx(0, 1)
     gate = CrzGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -266,8 +385,13 @@ def returnStandardRules():
     circ.cx(0, 1)
     circ.u3(p[0] / 2, p[1], 0, 1)
     gate = Cu3Gate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -280,8 +404,13 @@ def returnStandardRules():
     circ.h(1)
     circ.u2(-pi, pi - p[0], 0)
     gate = RXXGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -290,8 +419,13 @@ def returnStandardRules():
     circ.u1(p[0], 1)
     circ.cx(0, 1)
     gate = RZZGate(*p)
-    StandardRules[(gate.label, gate.name, gate.num_qubits)].equivs.append(
-        (gate.params, circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
 
     for n_qubits in range(2, 13):
@@ -308,9 +442,13 @@ def returnStandardRules():
                 circ.cx(i, j)
                 circ.h(j)
                 circ.u2(-pi, pi - p[0], i)
+        key = Key(name=gate.name,
+                  num_qubits=gate.num_qubits)
+        equiv = Equivalence(params=gate.params.copy(),
+                            circuit=circ.copy())
 
-        StandardRules[(gate.name, gate.num_qubits)].equivs.append(
-            (gate.params.copy(), circ.copy()))
+        StandardRules[key] = Entry(search_base=True, equivalences=[])
+        StandardRules[key].equivalences.append(equiv)
 
     reg = _qr(2, 'q')
     circ = _qc(reg)
@@ -318,8 +456,13 @@ def returnStandardRules():
     circ.cz(0, 1)
     circ.h(1)
     gate = CnotGate()
-    StandardRules[(gate.name, gate.num_qubits)].equivs.append(
-        (gate.params.copy(), circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
 
     reg = _qr(1, 'q')
@@ -330,8 +473,13 @@ def returnStandardRules():
     circ.rz(p[1] + pi, 0)
     circ.rx(pi / 2, 0)
     circ.rz(p[2] + pi, 0)
-    StandardRules[(U3Gate(*p).name, U3Gate(*p).num_qubits)].equivs.append(
-        (U3Gate(*p).params.copy(), circ.copy()))
+    key = Key(name=gate.name,
+              num_qubits=gate.num_qubits)
+    equiv = Equivalence(params=gate.params.copy(),
+                        circuit=circ.copy())
+
+    StandardRules[key] = Entry(search_base=True, equivalences=[])
+    StandardRules[key].equivalences.append(equiv)
 
     return StandardRules
 

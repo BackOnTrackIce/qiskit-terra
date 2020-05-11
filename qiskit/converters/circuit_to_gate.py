@@ -81,7 +81,7 @@ def circuit_to_gate(circuit, parameter_map=None):
     target = circuit.assign_parameters(parameter_dict, inplace=False)
 
     # pylint: disable=cyclic-import
-    from qiskit.circuit.equivalence_library import SessionEquivalenceLibrary as sel
+    from qiskit.circuit import SessionEquivalenceLibrary as sel
     # pylint: enable=cyclic-import
     sel.add_equivalence(gate, target)
 
