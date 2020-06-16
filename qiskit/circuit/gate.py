@@ -20,18 +20,24 @@ from scipy.linalg import schur
 from qiskit.circuit.exceptions import CircuitError
 from .instruction import Instruction
 
+def lister(cls):
+    cls.classes = list()
+    cls._init = cls.__init__
+    def init(self, *args, **kwargs):
+        cls = self.__class__
+        if cls not in cls.classes:
+            cls.classes.append(cls)
+        cls._init(self, *args, **kwargs)
+    cls.__init__ = init
+    return cls
 
+@lister
 class Gate(Instruction):
     """Unitary gate."""
-    _subclasses = []
 
     @classmethod
     def get_gate_register(cls):
-        return list(cls._subclasses)
-
-    def __init_subclass__(cls, isStandard = True):
-        if isStandard == True:
-         Gate._subclasses.append(cls)
+        return cls.classes
 
     def __init__(self, name, num_qubits, params, label=None):
         """Create a new gate.
